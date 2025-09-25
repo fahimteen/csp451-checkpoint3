@@ -1,0 +1,18 @@
+name: Setup Node and Install
+description: Reusable step to set up Node, cache dependencies, and run npm ci
+inputs:
+  node-version:
+    description: Node.js version
+    required: false
+    default: '20'
+runs:
+  using: composite
+  steps:
+    - name: Set up Node ${{ inputs['node-version'] }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs['node-version'] }}
+        cache: npm
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
