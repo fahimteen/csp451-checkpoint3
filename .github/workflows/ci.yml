@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -14,10 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup & Install
-        uses: ./.github/actions/setup-and-install
-        with:
-          node-version: '20'
+      - uses: ./.github/actions/setup-and-install
       - name: ESLint
         run: npm run lint
       - name: Prettier check
@@ -28,10 +26,7 @@ jobs:
     needs: lint
     steps:
       - uses: actions/checkout@v4
-      - name: Setup & Install
-        uses: ./.github/actions/setup-and-install
-        with:
-          node-version: '20'
+      - uses: ./.github/actions/setup-and-install
       - name: Run unit tests with coverage
         run: npm test -- --ci
       - name: Upload coverage artifact
@@ -39,21 +34,19 @@ jobs:
         with:
           name: coverage
           path: coverage
+      # ✅ Public repo: NO token line
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
+          files: coverage/**/lcov.info
 
   build:
     runs-on: ubuntu-latest
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - name: Setup & Install
-        uses: ./.github/actions/setup-and-install
-        with:
-          node-version: '20'
+      - uses: ./.github/actions/setup-and-install
       - name: Build app
         run: npm run build
       - name: Upload build artifact
