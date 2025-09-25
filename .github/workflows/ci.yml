@@ -34,12 +34,11 @@ jobs:
         with:
           name: coverage
           path: coverage
-      # ✅ Public repo: NO token line
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          fail_ci_if_error: true
           files: coverage/**/lcov.info
+          fail_ci_if_error: false   # ✅ won't break CI if Codecov rejects tokenless PRs
 
   build:
     runs-on: ubuntu-latest
