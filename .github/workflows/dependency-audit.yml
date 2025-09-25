@@ -1,0 +1,50 @@
+name: Daily Dependency Audit
+
+on:
+  schedule:
+    - cron: "0 13 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup & Install
+        uses: ./.github/actions/setup-and-install
+        with:
+          node-version: '20'
+      - name: npm audit (capture JSON)
+        id: audit
+        continue-on-error: true
+        run: |
+          npm audit --json > audit.json || true
+          echo "has_vulns=$(node -e \"const r=require('./audit.json');const v=r.metadata?.vulnerabilities||{};console.log(Object.values(v).some(n=>n>0)?'true':'false')\")" >> "$GITHUB_OUTPUT"
+      - name: Create issue if vulnerabilities found
+        if: steps.audit.outputs.has_vulns == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('audit.json','utf8'));
+            const vulns = data.metadata?.vulnerabilities || {};
+            const total = Object.values(vulns).reduce((a,b)=>a+b,0);
+            const lines = Object.entries(vulns).map(([k,v]) => `- **${k}**: ${v}`).join('\n');
+            const title = `Security: npm audit detected ${total} vulnerable dependencies`;
+            const body = `Automated daily dependency audit found vulnerabilities.\n\n### Counts by severity\n${lines}\n\nPlease run \`npm audit\` locally, update packages, and open a PR.`;
+            const { data: existing } = await github.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue in:title \"${title}\"`
+            });
+            if (!existing.items.length) {
+              await github.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['security','dependencies']
+              });
+            }
