@@ -1,6 +1,7 @@
 {
   "name": "checkpoint3-ci-cd",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -28,8 +29,8 @@
     "eslint": "^9.11.0",
     "@eslint/js": "^9.11.0",
     "globals": "^15.9.0",
-    "prettier": "^3.3.3",
     "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
     "jest": "^29.7.0"
   }
 }
